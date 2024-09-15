@@ -1,13 +1,13 @@
 import fs from 'fs';
 import { encryptFile, decryptFile } from '../services/AES/aes.service.js';
 
-// Controlador para cifrar archivos
+// Controller for encrypting files
 export const encryptFileController = (req, res) => {
-  const file = req.file; // Archivo subido
-  const key = req.body.key; // Clave ingresada
+  const file = req.file; // File uploaded
+  const key = req.body.key; // Key entered
 
-  if (!key || key.length !== 32) {
-    return res.status(400).send('La clave debe ser de 32 caracteres.');
+  if (!key || key.length > 32) {
+    return res.status(400).send('The key must be a maximum of 32 characters.');
   }
 
   try {
@@ -18,22 +18,22 @@ export const encryptFileController = (req, res) => {
     fs.writeFileSync(encryptedFilePath, encryptedFile);
 
     res.download(encryptedFilePath, encryptedFilePath, (err) => {
-      if (err) console.error('Error al enviar el archivo cifrado:', err);
+      if (err) console.error('Error sending the encrypted file:', err);
       fs.unlinkSync(file.path);
       fs.unlinkSync(encryptedFilePath);
     });
   } catch (error) {
-    res.status(500).send('Error al cifrar el archivo');
+    res.status(500).send('Error encrypting the file');
   }
 };
 
-// Controlador para descifrar archivos
+// Controller for decrypting files
 export const decryptFileController = (req, res) => {
   const file = req.file;
   const key = req.body.key;
 
-  if (!key || key.length !== 32) {
-    return res.status(400).send('La clave debe ser de 32 caracteres.');
+  if (!key || key.length > 32) {
+    return res.status(400).send('The key must be a maximum of 32 characters.');
   }
 
   try {
@@ -44,11 +44,11 @@ export const decryptFileController = (req, res) => {
     fs.writeFileSync(decryptedFilePath, decryptedFile);
 
     res.download(decryptedFilePath, decryptedFilePath, (err) => {
-      if (err) console.error('Error al enviar el archivo descifrado:', err);
+      if (err) console.error('Error sending the decrypted file:', err);
       fs.unlinkSync(file.path);
       fs.unlinkSync(decryptedFilePath);
     });
   } catch (error) {
-    res.status(500).send('Error al descifrar el archivo');
+    res.status(500).send('Error decrypting the file');
   }
 };
