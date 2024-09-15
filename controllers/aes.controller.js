@@ -1,5 +1,9 @@
-import fs from 'fs';
+import fs, { stat } from 'fs';
 import { encryptFile, decryptFile } from '../services/AES/aes.service.js';
+import { constants } from "../services/utils/constants.js"
+import { response } from "../services/utils/response.js"
+
+const { status, message } = constants.response
 
 // Controller for encrypting files
 export const encryptFileController = (req, res) => {
@@ -7,7 +11,7 @@ export const encryptFileController = (req, res) => {
   const key = req.body.key; // Key entered
 
   if (!key || key.length > 32) {
-    return res.status(400).send('The key must be a maximum of 32 characters.');
+    return res.status(status.bad_request).json(response(false, 'The key must be a maximum of 32 characters.', []));
   }
 
   try {
@@ -23,7 +27,7 @@ export const encryptFileController = (req, res) => {
       fs.unlinkSync(encryptedFilePath);
     });
   } catch (error) {
-    res.status(500).send('Error encrypting the file');
+    res.status(status.server_error).json(response(false, 'Error encrypting the file', []));
   }
 };
 
@@ -33,7 +37,7 @@ export const decryptFileController = (req, res) => {
   const key = req.body.key;
 
   if (!key || key.length > 32) {
-    return res.status(400).send('The key must be a maximum of 32 characters.');
+    return res.status(status.bad_request).json(response(false, 'The key must be a maximum of 32 characters.', []));
   }
 
   try {
@@ -49,6 +53,6 @@ export const decryptFileController = (req, res) => {
       fs.unlinkSync(decryptedFilePath);
     });
   } catch (error) {
-    res.status(500).send('Error decrypting the file');
+    res.status(status.server_error).json(response(false, 'Error decrypting the file; the key might be different.', []));
   }
 };
