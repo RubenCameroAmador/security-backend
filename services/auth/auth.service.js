@@ -1,8 +1,8 @@
 import { response } from "../utils/response.js"
 import User from '../../models/user.js'
-import crypto from 'crypto'
 import { login_regex, user_regex } from "../validations/auth.validation.js"
 import jwt from "jsonwebtoken"
+import bcrypt from 'bcrypt'
 
 const register = async user_request => {
 
@@ -10,11 +10,12 @@ const register = async user_request => {
     if (error) return response(false, error.details[0].message)
 
     const is_nickname = await User.findOne({ nickname: user_request.nickname })
-    if (is_nickname) return response(false, 'nickname already exist')
+    if (is_nickname) return response(false, 'Nickname already exist')
 
     delete user_request.confirm_password
 
-    const hash = crypto.createHash('sha1').update(user_request.password).digest('hex')
+    const salt = await bcrypt.genSalt()
+    const hash = await bcrypt.hash(user_request.password, salt)
 
     user_request = {
         ...user_request,
@@ -29,7 +30,7 @@ const register = async user_request => {
 
     delete user.password
 
-    return response(true, 'user created', { user })
+    return response(true, 'User created', { user })
 }
 
 const login = async (login_request) => {
@@ -40,8 +41,8 @@ const login = async (login_request) => {
     const user_db = await User.findOne({ nickname: login_request.nickname })
     if (!user_db) return response(false, 'User don\'t exist')
 
-    const hash = crypto.createHash('sha1').update(login_request.password).digest('hex');
-    if (hash !== user_db.password) return response(false, 'Incorrect password');
+    const validPassword = await bcrypt.compare(login_request.password, user_db.password)
+    if (!validPassword) return response(false, 'Incorrect password')
 
     const user = { ...user_db.toObject() }
 
