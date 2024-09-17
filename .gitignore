@@ -2,3 +2,4 @@
 .env.produccion
 
 node_modules
+uploads
