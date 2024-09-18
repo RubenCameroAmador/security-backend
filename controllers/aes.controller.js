@@ -20,9 +20,14 @@ export const encryptFileController = (req, res) => {
   try {
     const safeFileName = sanitize(file.originalname);
 
-    const filePath = path.join(uploadDirectory, safeFileName);
-    const fileBuffer = fs.readFileSync(file.path);
+    const filePath = path.resolve(uploadDirectory, file.filename);
 
+    const realFilePath = fs.realpathSync(filePath);
+    if (!realFilePath.startsWith(uploadDirectory)) {
+      return res.status(403).json(response(false, 'Access denied.', []));
+    }
+
+    const fileBuffer = fs.readFileSync(realFilePath);
     const encryptedFile = encryptFile(fileBuffer, key);
 
     const encryptedFilePath = path.join(uploadDirectory, `encrypted_${safeFileName}`);
@@ -31,7 +36,7 @@ export const encryptFileController = (req, res) => {
     res.download(encryptedFilePath, safeFileName, (err) => {
       if (err) console.error('Error sending the encrypted file:', err);
 
-      fs.unlinkSync(file.path);
+      fs.unlinkSync(realFilePath);
       fs.unlinkSync(encryptedFilePath);
     });
   } catch (error) {
@@ -51,9 +56,14 @@ export const decryptFileController = (req, res) => {
   try {
     const safeFileName = sanitize(file.originalname);
 
-    const filePath = path.join(uploadDirectory, safeFileName);
-    const fileBuffer = fs.readFileSync(file.path);
+    const filePath = path.resolve(uploadDirectory, file.filename);
 
+    const realFilePath = fs.realpathSync(filePath);
+    if (!realFilePath.startsWith(uploadDirectory)) {
+      return res.status(403).json(response(false, 'Access denied.', []));
+    }
+
+    const fileBuffer = fs.readFileSync(realFilePath);
     const decryptedFile = decryptFile(fileBuffer, key);
 
     const decryptedFilePath = path.join(uploadDirectory, `decrypted_${safeFileName}`);
@@ -62,7 +72,7 @@ export const decryptFileController = (req, res) => {
     res.download(decryptedFilePath, safeFileName, (err) => {
       if (err) console.error('Error sending the decrypted file:', err);
 
-      fs.unlinkSync(file.path);
+      fs.unlinkSync(realFilePath);
       fs.unlinkSync(decryptedFilePath);
     });
   } catch (error) {
