@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { encryptFileController, decryptFileController } from '../controllers/aes.controller.js';
 import multer from 'multer';
 import rateLimit from 'express-rate-limit';
+import { valid_token } from '../services/middleware/valid_token.js';
 
 // Configurar multer para subir archivos a la carpeta 'uploads/'
 const upload = multer({ dest: 'uploads/' });
@@ -18,9 +19,9 @@ const aesLimiter = rateLimit({
 const aes_router = Router();
 
 // Ruta para cifrar archivos
-aes_router.post('/encrypt', aesLimiter, upload.single('file'), encryptFileController);
+aes_router.post('/encrypt', valid_token, aesLimiter, upload.single('file'), encryptFileController);
 
 // Ruta para descifrar archivos
-aes_router.post('/decrypt', aesLimiter, upload.single('file'), decryptFileController);
+aes_router.post('/decrypt', valid_token, aesLimiter, upload.single('file'), decryptFileController);
 
 export { aes_router };
