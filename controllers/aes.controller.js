@@ -1,9 +1,12 @@
-import fs, { stat } from 'fs';
-import { encryptFile, decryptFile } from '../services/AES/aes.service.js';
+import fs from 'fs'
+import path from 'path'
+import { encryptFile, decryptFile } from '../services/AES/aes.service.js'
 import { constants } from "../services/utils/constants.js"
 import { response } from "../services/utils/response.js"
+import sanitize from 'sanitize-filename'
 
 const { status, message } = constants.response
+const uploadDirectory = path.resolve('uploads')
 
 // Controller for encrypting files
 export const encryptFileController = (req, res) => {
@@ -15,14 +18,19 @@ export const encryptFileController = (req, res) => {
   }
 
   try {
+    const safeFileName = sanitize(file.originalname);
+
+    const filePath = path.join(uploadDirectory, safeFileName);
     const fileBuffer = fs.readFileSync(file.path);
+
     const encryptedFile = encryptFile(fileBuffer, key);
 
-    const encryptedFilePath = `encrypted_${file.originalname}`;
+    const encryptedFilePath = path.join(uploadDirectory, `encrypted_${safeFileName}`);
     fs.writeFileSync(encryptedFilePath, encryptedFile);
 
-    res.download(encryptedFilePath, encryptedFilePath, (err) => {
+    res.download(encryptedFilePath, safeFileName, (err) => {
       if (err) console.error('Error sending the encrypted file:', err);
+
       fs.unlinkSync(file.path);
       fs.unlinkSync(encryptedFilePath);
     });
@@ -41,14 +49,19 @@ export const decryptFileController = (req, res) => {
   }
 
   try {
+    const safeFileName = sanitize(file.originalname);
+
+    const filePath = path.join(uploadDirectory, safeFileName);
     const fileBuffer = fs.readFileSync(file.path);
+
     const decryptedFile = decryptFile(fileBuffer, key);
 
-    const decryptedFilePath = `decrypted_${file.originalname}`;
+    const decryptedFilePath = path.join(uploadDirectory, `decrypted_${safeFileName}`);
     fs.writeFileSync(decryptedFilePath, decryptedFile);
 
-    res.download(decryptedFilePath, decryptedFilePath, (err) => {
+    res.download(decryptedFilePath, safeFileName, (err) => {
       if (err) console.error('Error sending the decrypted file:', err);
+
       fs.unlinkSync(file.path);
       fs.unlinkSync(decryptedFilePath);
     });
