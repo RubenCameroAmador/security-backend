@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { downloadUsers } from "../controllers/downloadUser.controller.js";
-<<<<<<< HEAD
 import rateLimit from 'express-rate-limit';
 import { valid_token } from '../services/middleware/valid_token.js';
 
@@ -16,11 +15,5 @@ const downloadLimiter = rateLimit({
 })
 
 downloadUser_router.get('/', valid_token, downloadLimiter, downloadUsers);
-=======
-
-const downloadUser_router = Router();
-
-downloadUser_router.get('/', downloadUsers);
->>>>>>> a1e43f28093f2e4ea69777fa818e10783f29a2de
 
 export { downloadUser_router }
